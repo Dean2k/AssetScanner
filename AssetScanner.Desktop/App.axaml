@@ -1,0 +1,22 @@
+﻿<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:AssetScanner.Desktop.Converters"
+             x:Class="AssetScanner.Desktop.App"
+             RequestedThemeVariant="Dark">
+
+    <Application.Resources>
+        <conv:RiskLevelColorConverter x:Key="RiskLevelColorConverter" />
+        <conv:SeverityColorConverter x:Key="SeverityColorConverter" />
+
+        <ExperimentalAcrylicMaterial x:Key="MainAcrylicMaterial"
+                                     BackgroundSource="Digger"
+                                     TintColor="#0f1117"
+                                     TintOpacity="0.85"
+                                     MaterialOpacity="0.65" />
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+</Application>
+

@@ -1,0 +1,402 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:AssetScanner.Desktop.ViewModels"
+        mc:Ignorable="d"
+        d:DesignWidth="960"
+        d:DesignHeight="720"
+        x:Class="AssetScanner.Desktop.MainWindow"
+        x:CompileBindings="False"
+        Title="VRChat Package Scanner"
+        Width="960"
+        Height="720"
+        MinWidth="640"
+        MinHeight="480">
+
+    <Design.DataContext>
+        <vm:MainViewModel />
+    </Design.DataContext>
+
+    <Grid Background="#0f1117"
+          RowDefinitions="Auto,*">
+        <!-- Header -->
+        <StackPanel Grid.Row="0"
+                    Margin="32,24,32,8">
+            <TextBlock Text="VRChat Package Scanner"
+                      FontSize="24"
+                      FontWeight="Bold"
+                      Foreground="#e2e8f0" />
+            <TextBlock Text="Static analysis for Unity/VRChat packages"
+                      FontSize="13"
+                      Foreground="#94a3b8"
+                      Margin="0,4,0,0" />
+            <StackPanel Orientation="Horizontal"
+                          Spacing="8"
+                          Margin="0,8,0,0">
+                <TextBlock Text="{Binding DbStatus}"
+                          FontSize="11"
+                          Foreground="#64748b"
+                          VerticalAlignment="Center" />
+                <Button Content="Update Threat DB"
+                        Padding="8,4"
+                        Background="#334155"
+                        Foreground="#e2e8f0"
+                        CornerRadius="6"
+                        FontSize="11"
+                        Click="OnUpdateDbClick"
+                        IsEnabled="{Binding !IsUpdatingDb}" />
+                <Button Content="Compute Whitelist Hashes"
+                        Padding="8,4"
+                        Background="#334155"
+                        Foreground="#e2e8f0"
+                        CornerRadius="6"
+                        FontSize="11"
+                        Click="OnComputeHashesClick" />
+            </StackPanel>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1"
+                     VerticalScrollBarVisibility="Auto"
+                     Margin="32,0,32,24">
+            <ScrollViewer.Styles>
+                <Style Selector="ScrollBar">
+                    <Setter Property="Width"
+                            Value="18" />
+                </Style>
+                <Style Selector="ScrollBar:vertical Thumb">
+                    <Setter Property="MinHeight"
+                            Value="40" />
+                </Style>
+            </ScrollViewer.Styles>
+            <StackPanel Spacing="16">
+                <!-- Drop Zone -->
+                <Border Name="DropZoneBorder"
+                        CornerRadius="16"
+                        Padding="32"
+                        Background="#161b22"
+                        BorderBrush="#334155"
+                        BorderThickness="2">
+                    <StackPanel Spacing="12"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="[ DROP FILES HERE ]"
+                                  FontSize="28"
+                                  FontWeight="Bold"
+                                  Foreground="#475569"
+                                  HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding StatusText}"
+                                  FontSize="14"
+                                  Foreground="#94a3b8"
+                                  TextWrapping="Wrap"
+                                  TextAlignment="Center"
+                                  HorizontalAlignment="Center" />
+                        <Button Content="Browse File"
+                                HorizontalAlignment="Center"
+                                Padding="16,8"
+                                Background="#3b82f6"
+                                Foreground="White"
+                                CornerRadius="8"
+                                FontWeight="SemiBold"
+                                Click="OnBrowseClick" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Progress -->
+                <ProgressBar IsIndeterminate="True"
+                             IsVisible="{Binding IsScanning}"
+                             Height="4"
+                             Margin="0,4" />
+
+                <!-- Error -->
+                <Border Background="#331111"
+                         BorderBrush="#ef4444"
+                         BorderThickness="1"
+                         CornerRadius="8"
+                         Padding="16"
+                         IsVisible="{Binding HasError}">
+                    <TextBlock Text="{Binding ErrorMessage}"
+                              Foreground="#fca5a5"
+                              TextWrapping="Wrap" />
+                </Border>
+
+                <!-- Report Summary View -->
+                <StackPanel IsVisible="{Binding HasReport}"
+                            Spacing="16">
+                    <!-- Clickable Score Card -->
+                    <Button Background="Transparent"
+                            BorderThickness="0"
+                            Padding="0"
+                            Cursor="Hand"
+                            Click="OnScoreCardClick">
+                        <Border CornerRadius="16"
+                                Padding="24"
+                                Background="#1e293b"
+                                BorderBrush="#334155"
+                                BorderThickness="1">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <StackPanel Grid.Column="0"
+                                           Spacing="4">
+                                    <TextBlock Text="{Binding Report.RiskLevelLabel}"
+                                              FontSize="32"
+                                              FontWeight="Bold"
+                                              Foreground="{Binding Report.RiskLevelLabel, Converter={StaticResource RiskLevelColorConverter}}" />
+                                    <TextBlock Text="{Binding Report.Score, StringFormat='{}{0} pts'}"
+                                              FontSize="18"
+                                              Foreground="#94a3b8" />
+                                    <TextBlock Text="{Binding Report.FileName}"
+                                              FontSize="12"
+                                              Foreground="#64748b" />
+                                    <StackPanel Orientation="Horizontal"
+                                                Spacing="6"
+                                                Margin="0,4,0,0">
+                                        <Border CornerRadius="4"
+                                                Padding="4,2"
+                                                Background="#334155">
+                                            <TextBlock Text="▼"
+                                                      FontSize="10"
+                                                      Foreground="#94a3b8" />
+                                        </Border>
+                                        <TextBlock Text="Click to expand detailed file breakdown"
+                                                      FontSize="11"
+                                                      Foreground="#64748b" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1"
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center"
+                                           Spacing="4">
+                                    <TextBlock Text="{Binding Report.TotalFiles, StringFormat='{}{0} files scanned'}"
+                                              Foreground="#64748b"
+                                              FontSize="12"
+                                              HorizontalAlignment="Right" />
+                                    <TextBlock Text="{Binding Report.TotalFindings, StringFormat='{}{0} findings'}"
+                                              Foreground="#64748b"
+                                              FontSize="12"
+                                              HorizontalAlignment="Right" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Button>
+
+                    <!-- Findings List -->
+                    <ItemsControl ItemsSource="{Binding GroupedFindings}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:FindingGroup">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="{Binding Severity}"
+                                              FontSize="16"
+                                              FontWeight="Bold"
+                                              Foreground="{Binding Severity, Converter={StaticResource SeverityColorConverter}}"
+                                              Margin="0,8,0,0" />
+                                    <ItemsControl ItemsSource="{Binding Items}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#1e293b"
+                                                         BorderBrush="#334155"
+                                                         BorderThickness="1"
+                                                         CornerRadius="8"
+                                                         Padding="12">
+                                                    <StackPanel Spacing="4">
+                                                        <Grid ColumnDefinitions="*,Auto"
+                                                              RowDefinitions="Auto,Auto,Auto">
+                                                            <TextBlock Grid.Row="0"
+                                                                      Grid.Column="0"
+                                                                      Text="{Binding Message}"
+                                                                      Foreground="#e2e8f0"
+                                                                      FontSize="13"
+                                                                      TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Row="0"
+                                                                      Grid.Column="1"
+                                                                      Text="{Binding Points, StringFormat='{}{0} pts'}"
+                                                                      Foreground="#64748b"
+                                                                      FontSize="12"
+                                                                      HorizontalAlignment="Right"
+                                                                      Margin="12,0,0,0" />
+
+                                                            <TextBlock Grid.Row="1"
+                                                                      Grid.Column="0"
+                                                                      Grid.ColumnSpan="2"
+                                                                      Text="{Binding Location}"
+                                                                      Foreground="#64748b"
+                                                                      FontSize="11"
+                                                                      TextWrapping="Wrap" />
+
+                                                            <TextBlock Grid.Row="2"
+                                                                      Grid.Column="0"
+                                                                      Grid.ColumnSpan="2"
+                                                                      Text="{Binding Context}"
+                                                                      Foreground="#94a3b8"
+                                                                      FontSize="11"
+                                                                      TextWrapping="Wrap"
+                                                                      IsVisible="{Binding Context, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                                        </Grid>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- Detail View -->
+                <StackPanel IsVisible="{Binding IsDetailViewVisible}"
+                            Spacing="12">
+                    <!-- Back button -->
+                    <Button Content="← Back to Summary"
+                            Click="OnBackToSummaryClick"
+                            Background="#334155"
+                            Foreground="#e2e8f0"
+                            CornerRadius="6"
+                            Padding="12,6"
+                            HorizontalAlignment="Left" />
+
+                    <TextBlock Text="Detailed File Breakdown"
+                              FontSize="20"
+                              FontWeight="Bold"
+                              Foreground="#e2e8f0" />
+
+                    <TextBlock Text="{Binding FileGroups.Count, StringFormat='{}{0} file types'}"
+                              FontSize="13"
+                              Foreground="#94a3b8" />
+
+                    <!-- File groups by type -->
+                    <ItemsControl ItemsSource="{Binding FileGroups}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:FileTypeGroup">
+                                <Border Background="#1e293b"
+                                         BorderBrush="#334155"
+                                         BorderThickness="1"
+                                         CornerRadius="8"
+                                         Padding="12"
+                                         Margin="0,4">
+                                    <Expander IsExpanded="False"
+                                              HorizontalAlignment="Stretch">
+                                        <Expander.Header>
+                                            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                                <TextBlock Grid.Column="0"
+                                                          Text="▼"
+                                                          FontSize="14"
+                                                          Foreground="#94a3b8"
+                                                          VerticalAlignment="Center"
+                                                          Margin="0,0,8,0" />
+
+                                                <TextBlock Grid.Column="1"
+                                                          Text="{Binding Type}"
+                                                          FontSize="14"
+                                                          FontWeight="SemiBold"
+                                                          Foreground="#e2e8f0"
+                                                          VerticalAlignment="Center" />
+
+                                                <TextBlock Grid.Column="2"
+                                                          Text="{Binding FileCount, StringFormat='{}{0} files'}"
+                                                          FontSize="12"
+                                                          Foreground="#64748b"
+                                                          VerticalAlignment="Center"
+                                                          Margin="8,0,0,0" />
+
+                                                <Border Grid.Column="3"
+                                                         CornerRadius="4"
+                                                         Padding="6,2"
+                                                         Background="#334155"
+                                                         Margin="8,0,0,0">
+                                                    <TextBlock Text="{Binding TotalFindings, StringFormat='{}{0} findings'}"
+                                                              FontSize="11"
+                                                              Foreground="#e2e8f0" />
+                                                </Border>
+                                            </Grid>
+                                        </Expander.Header>
+                                        <Expander.Content>
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="Click any row to see individual findings"
+                                                          FontSize="11"
+                                                          Foreground="#64748b"
+                                                          Margin="0,0,0,4" />
+                                                <ItemsControl ItemsSource="{Binding Files}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:ScannedFileDetail">
+                                                            <Border Background="#0f172a"
+                                                                     BorderBrush="#334155"
+                                                                     BorderThickness="1"
+                                                                     CornerRadius="6"
+                                                                     Padding="10"
+                                                                     Margin="0,2">
+                                                                <StackPanel Spacing="4">
+                                                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                                                        <Border Grid.Column="0"
+                                                                                 CornerRadius="4"
+                                                                                 Padding="4,2"
+                                                                                 Background="{Binding StatusColor}"
+                                                                                 Margin="0,0,8,0">
+                                                                            <TextBlock Text="{Binding StatusText}"
+                                                                                      FontSize="10"
+                                                                                      FontWeight="Bold"
+                                                                                      Foreground="White" />
+                                                                        </Border>
+
+                                                                        <TextBlock Grid.Column="1"
+                                                                                  Text="{Binding Path}"
+                                                                                  Foreground="#e2e8f0"
+                                                                                  FontSize="12"
+                                                                                  TextWrapping="Wrap"
+                                                                                  VerticalAlignment="Center" />
+
+                                                                        <TextBlock Grid.Column="2"
+                                                                                  Text="{Binding Size}"
+                                                                                  Foreground="#64748b"
+                                                                                  FontSize="11"
+                                                                                  VerticalAlignment="Center"
+                                                                                  Margin="8,0,0,0" />
+                                                                    </Grid>
+
+                                                                    <!-- Findings for this file -->
+                                                                    <ItemsControl ItemsSource="{Binding Findings}">
+                                                                        <ItemsControl.ItemTemplate>
+                                                                            <DataTemplate>
+                                                                                <Border Background="#1e293b"
+                                                                                         BorderBrush="#334155"
+                                                                                         BorderThickness="1"
+                                                                                         CornerRadius="4"
+                                                                                         Padding="8"
+                                                                                         Margin="0,2">
+                                                                                    <StackPanel Spacing="2">
+                                                                                        <StackPanel Orientation="Horizontal"
+                                                                                                    Spacing="8">
+                                                                                            <TextBlock Text="{Binding Severity}"
+                                                                                                      FontSize="11"
+                                                                                                      FontWeight="Bold"
+                                                                                                      Foreground="{Binding Severity, Converter={StaticResource SeverityColorConverter}}" />
+                                                                                            <TextBlock Text="{Binding Points, StringFormat='{}{0} pts'}"
+                                                                                                      FontSize="11"
+                                                                                                      Foreground="#64748b" />
+                                                                                        </StackPanel>
+                                                                                        <TextBlock Text="{Binding Message}"
+                                                                                                  Foreground="#94a3b8"
+                                                                                                  FontSize="12"
+                                                                                                  TextWrapping="Wrap" />
+                                                                                    </StackPanel>
+                                                                                </Border>
+                                                                            </DataTemplate>
+                                                                        </ItemsControl.ItemTemplate>
+                                                                    </ItemsControl>
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Expander.Content>
+                                    </Expander>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

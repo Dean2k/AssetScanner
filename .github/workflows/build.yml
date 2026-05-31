@@ -107,3 +107,36 @@ jobs:
           name: ${{ matrix.archive }}
           path: ${{ matrix.archive }}
           if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          pattern: AssetScanner-*.zip
+
+      - name: Create Nightly Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          name: Nightly Build (${{ github.sha }})
+          body: |
+            Automated nightly build from commit `${{ github.sha }}` on branch `${{ github.ref_name }}`.
+
+            | Platform | Archive |
+            |----------|---------|
+            | Windows x64 | `AssetScanner-win-x64.zip` |
+            | Linux x64 | `AssetScanner-linux-x64.zip` |
+            | macOS x64 | `AssetScanner-osx-x64.zip` |
+
+            These are self-contained single-file executables — no .NET runtime required.
+          prerelease: true
+          draft: false
+          files: ./artifacts/**/*.zip
+          generate_release_notes: false

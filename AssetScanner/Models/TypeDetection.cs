@@ -32,6 +32,7 @@ public static class TypeDetection
         {
             "cs" => FileType.CsScript,
             "dll" => FileType.DllPe,
+            "exe" => FileType.DllPe,
             "unitypackage" => FileType.UnityPackage,
             "zip" => FileType.Zip,
             "prefab" => FileType.Prefab,

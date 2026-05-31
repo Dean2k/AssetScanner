@@ -46,8 +46,8 @@ public static class PackageAnalyzer
             }
         }
 
-        // DLL analysis
-        foreach (var entry in entries.Where(e => e.Type == AssetType.Dll || Path.GetExtension(e.Path).Equals(".dll", StringComparison.OrdinalIgnoreCase)))
+        // DLL / EXE analysis
+        foreach (var entry in entries.Where(e => e.Type == AssetType.Dll || Path.GetExtension(e.Path).Equals(".dll", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(e.Path).Equals(".exe", StringComparison.OrdinalIgnoreCase)))
         {
             findings.AddRange(DllAnalyzer.Analyze(entry.Data, entry.Path));
         }

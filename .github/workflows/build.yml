@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [master]
     paths-ignore:
       - '**.md'
       - '**.png'
@@ -11,7 +11,7 @@ on:
       - '**.gif'
       - '**.svg'
   pull_request:
-    branches: [main, master, develop]
+    branches: [master]
     paths-ignore:
       - '**.md'
       - '**.png'
@@ -110,7 +110,6 @@ jobs:
 
   release:
     needs: build
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -121,13 +120,13 @@ jobs:
           path: ./artifacts
           pattern: AssetScanner-*.zip
 
-      - name: Create Nightly Release
+      - name: Update Latest Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: nightly
-          name: Nightly Build (${{ github.sha }})
+          tag_name: latest
+          name: Latest Build
           body: |
-            Automated nightly build from commit `${{ github.sha }}` on branch `${{ github.ref_name }}`.
+            Latest build from commit `${{ github.sha }}` on `master`.
 
             | Platform | Archive |
             |----------|---------|
@@ -135,8 +134,8 @@ jobs:
             | Linux x64 | `AssetScanner-linux-x64.zip` |
             | macOS x64 | `AssetScanner-osx-x64.zip` |
 
-            These are self-contained single-file executables — no .NET runtime required.
-          prerelease: true
+            Self-contained single-file executables — no .NET runtime required.
           draft: false
+          prerelease: false
           files: ./artifacts/**/*.zip
-          generate_release_notes: false
+          generate_release_notes: true

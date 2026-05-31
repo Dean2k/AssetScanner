@@ -6,12 +6,12 @@ A standalone desktop tool for statically analysing Unity/VRChat packages, script
 
 ## Features
 
-- **Drag & drop** `.unitypackage`, `.zip`, folders, `.cs`, or `.dll` files
+- **Drag & drop** `.unitypackage`, `.zip`, folders, `.cs`, `.dll`, or `.exe` files
 - **Static analysis** — no execution required, everything stays local
 - **Offline threat intelligence** — cross-references SHA-256 hashes, URLs, and IPs against downloaded databases (MalwareBazaar, URLhaus, Feodo Tracker)
 - **UnityPackage extraction** — handles modern ZIP-format and legacy gzip+tar `.unitypackage` files, plus plain ZIP archives
 - **C# script analysis** — detects dangerous APIs (`Process.Start`, `Assembly.Load`, `DllImport`, `Reflection.Emit`, etc.), obfuscation patterns, and suspicious URLs/IPs
-- **DLL / PE analysis** — custom lightweight PE parser that inspects imports, sections, and entropy
+- **DLL / EXE / PE analysis** — custom lightweight PE parser that inspects imports, sections, and entropy
 - **Whitelist system** — exact SHA-256 hash matching for popular legitimate packages (Poiyomi Toon, VRCFury, PumkinsAvatarTools, GoGoLoco). Modified files fall back to obfuscation-only analysis instead of being blindly trusted
 - **Detailed file breakdown** — click the score card after a scan to see every file grouped by type with individual findings
 
@@ -24,6 +24,7 @@ A standalone desktop tool for statically analysing Unity/VRChat packages, script
 | Folders | Recursively scanned |
 | `.cs` | Individual C# script files |
 | `.dll` | PE/DLL analysis |
+| `.exe` | PE/EXE analysis (imports, entropy, strings) |
 
 ## Building
 
@@ -55,14 +56,17 @@ AssetScanner.Desktop/bin/Release/net8.0/AssetScanner.Desktop
 
 ## CI / CD
 
-Every push to `main`, `master`, or `develop` triggers a build for **Windows (x64)**, **Linux (x64)**, and **macOS (x64 & ARM64)** via GitHub Actions.
+Every push to `master` triggers a build for **Windows (x64)**, **Linux (x64)**, and **macOS (x64)** via GitHub Actions and updates the **Latest Release** on GitHub automatically.
 
-| Trigger | Platforms | Artifacts |
-|---------|-----------|-----------|
-| Push / PR | win-x64, linux-x64, osx-x64 | ZIP per platform |
-| Version tag (`v*`) | win-x64, linux-x64, osx-x64, osx-arm64 | Draft GitHub Release with all ZIPs |
+| Platform | Archive |
+|----------|---------|
+| Windows x64 | `AssetScanner-win-x64.zip` |
+| Linux x64 | `AssetScanner-linux-x64.zip` |
+| macOS x64 | `AssetScanner-osx-x64.zip` |
 
 No local .NET runtime is required — the published binaries are **self-contained single-file executables**.
+
+Version tags (`v*`) also trigger a full release with all platforms plus **macOS ARM64**.
 
 ## Architecture
 
